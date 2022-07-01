@@ -1,4 +1,4 @@
-console.info("%c  MIFLORA-CARD  \n%c Version 0.1.2 ", "color: orange; font-weight: bold; background: black", "color: white; font-weight: bold; background: dimgray");
+console.info("%c  MIFLORA-CARD  \n%c Version 0.1.3 ", "color: orange; font-weight: bold; background: black", "color: white; font-weight: bold; background: dimgray");
 class MifloraCard extends HTMLElement {
     constructor() {
         super();
@@ -10,6 +10,7 @@ class MifloraCard extends HTMLElement {
             moisture: 'hass:water',
             temperature: 'hass:thermometer',
             intensity: 'hass:white-balance-sunny',
+            rssi: 'mdi:wifi',
             conductivity: 'hass:emoticon-poop',
             battery: 'hass:battery'
         };
@@ -52,7 +53,11 @@ class MifloraCard extends HTMLElement {
         var _maxMoisture = parseFloat(config.max_moisture);
         var _minMoisture = parseFloat(config.min_moisture);
         var _minConductivity = parseFloat(config.min_conductivity);
-        var _minTemperature = parseFloat(config.min_termperature);
+        var _maxConductivity = parseFloat(config.max_conductivity);        
+        var _minTemperature = parseFloat(config.min_temperature);
+        var _maxTemperature = parseFloat(config.max_temperature);
+		var _minIntensity = parseFloat(config.min_intensity);
+        var _maxIntensity = parseFloat(config.max_intensity);
 
         this.shadowRoot.getElementById('container').innerHTML = `
             <div class="content clearfix">
@@ -93,14 +98,29 @@ class MifloraCard extends HTMLElement {
                 if (_state < _minConductivity) {
                     _alertStyle = ';color:red';
                     _alertIcon = '&#9660; ';
+                } else if (_state > _maxConductivity) {
+                    _alertStyle = ';color:red';
+                    _alertIcon = '&#9650; '
                 }
             }
             if (_name == 'temperature') {
                 if (_state < _minTemperature) {
                     _alertStyle = ';color:red';
                     _alertIcon = '&#9660; ';
+                } else if (_state > _maxTemperature) {
+                    _alertStyle = ';color:red';
+                    _alertIcon = '&#9650; '
                 }
             }
+			if (_name == 'intensity') {
+                if (_state < _minIntensity) {
+                    _alertStyle = ';color:red';
+                    _alertIcon = '&#9660; ';
+                } else if (_state > _maxIntensity) {
+                    _alertStyle = ';color:red';
+                    _alertIcon = '&#9650; '
+                }
+			}
             this.shadowRoot.getElementById('sensors').innerHTML += `
                 <div id="sensor${i}" class="sensor">
                     <div class="icon"><ha-icon icon="${_icon}"></ha-icon></div>
@@ -141,14 +161,20 @@ class MifloraCard extends HTMLElement {
                 width: 100%;
             }
             .image {
-                float: right;
                 margin-left: 15px;
                 margin-right: 15px;
                 margin-bottom: 15px;
+                margin-top: -8px;
                 width: 125px;
                 height: 125px;
                 border-radius: 6px;
             }
+            .location {
+                float: right;
+                margin-left: 15px;
+                display: grid;
+                text-align: center;
+            }            
             .sensor {
                 display: flex;
                 cursor: pointer;
@@ -180,8 +206,17 @@ class MifloraCard extends HTMLElement {
                 display: table;
             }
             `;
-        plantimage.innerHTML = `
-            <img class="image" src=/local/${config.image}>  
+
+            // Check if location is set and save location in Variable plantlocation
+            if (config.location == null) {
+                var _plantlocation = '';
+            } else {
+                var _plantlocation = config.location;
+            }
+
+            // Display Plant image (required) and location (optional)
+            plantimage.innerHTML = `
+            <p class="location"><img class="image" src=/local/${config.image}>${_plantlocation}</p>
             `;
 
         content.id = "container";
